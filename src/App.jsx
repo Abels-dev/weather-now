@@ -2,12 +2,17 @@ import { useRef, useState } from "react";
 import NavBar from "./components/NavBar";
 import Loading from "./components/Loading";
 import { weatherCodeMap } from "./utils/weatherCodeMap";
+import DailyForecast from "./components/DailyForecast";
+import HourlyForecast from "./components/HourlyForecast";
 const App = () => {
    const [searchLocation, setSearchLocation] = useState("");
    const [suggestions, setSuggestions] = useState([]);
    const [loading, setLoading] = useState(false);
    const [location, setLocation] = useState(null);
    const [currentWeather, setCurrentWeather] = useState(null);
+   const [dailyForecast, setDailyForecast] = useState(null);
+   const [hourlyForecast, setHourlyForecast] = useState(null);
+   const [notFound, setNotFound] = useState(false);
    const timeoutRef = useRef(null);
 
    const formatDate = (dateString) => {
@@ -35,7 +40,14 @@ const App = () => {
          console.log("Error fetching suggestions:", error);
       }
    };
-
+   const handleSearchBtn=()=>{
+      fetchSuggestions(searchLocation);
+      if(suggestions.length===0){
+         setNotFound(true);
+      }else{
+         setNotFound(false);
+      }
+   }
    const handleInputChange = (e) => {
       const value = e.target.value;
       setSearchLocation(value);
@@ -71,13 +83,11 @@ const App = () => {
       setLoading(true);
       try {
          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true&hourly=apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m`
+            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true&hourly=apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,weathercode`
          );
          const data = await res.json();
-         console.log("Fetched weather data:", data);
-
+         setHourlyForecast(data.hourly);
          const extractedWeather = extractCurrentWeather(data);
-         console.log("Extracted weather data:", extractedWeather);
          setCurrentWeather(extractedWeather);
          const locationName = location.name + ", " + location.country;
          setLocation(locationName);
@@ -87,22 +97,34 @@ const App = () => {
          setLoading(false);
       }
    };
+   const fetchDailyForecast = async (location) => {
+      try {
+         const res = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode`
+         );
+         const data = await res.json();
+         setDailyForecast(data.daily);
+      } catch (error) {
+         console.log("Error fetching daily forecast data:", error);
+      }
+   };
    const handleSelectSuggestion = (suggestion) => {
       setSearchLocation("");
       setSuggestions([]);
       console.log("Selected suggestion:", suggestion);
       fetchWeatherData(suggestion);
+      fetchDailyForecast(suggestion);
    };
    return (
-      <div className="w-full min-h-screen bg-[#02012C] p-6">
+      <div className="w-full min-h-screen bg-[#02012C] p-6 font-bricolage">
          <div className="max-w-[1216px] mx-auto">
             <NavBar />
             <section>
-               <h1 className="font-bold text-5xl text-white text-center my-16">
+               <h1 className="font-bold font-bricolage text-5xl text-white text-center my-16">
                   How’s the sky looking today?
                </h1>
-               <div className="flex items-center gap-4 w-full max-w-2xl mx-auto">
-                  <div className="flex-1 relative flex items-center gap-4 bg-[#1E1B3C] text-white py-4 px-6 rounded-xl">
+               <div className="flex not-md:flex-col items-center gap-4 w-full max-w-2xl mx-auto">
+                  <div className="flex-1 relative flex items-center gap-4 bg-[#1E1B3C] text-white py-4 px-6 rounded-xl w-full">
                      <img src="./images/icon-search.svg" alt="Search Icon" />
                      <input
                         type="text"
@@ -131,16 +153,18 @@ const App = () => {
                         </div>
                      )}
                   </div>
-                  <button className="px-6 py-4 bg-blue-600 text-white rounded-xl w-28">
+                  <button className="px-6 py-4 bg-blue-600 text-white rounded-xl not-md:w-full w-28" onClick={handleSearchBtn}>
                      Search
                   </button>
                </div>
             </section>
             {loading ? (
                <Loading />
+            ) : notFound ? (
+               <div className="font-semibold text-white text-2xl text-center mt-12">No search result found!</div>
             ) : (
-               <section className="mt-12 grid grid-cols-[1fr_auto] grid-rows-[18rem_auto_auto] gap-6">
-                  <div className="col-start-1 bg-[url('/images/bg-today-large.svg')] bg-cover bg-center p-4 h-72 w-full rounded-2xl flex items-center justify-between text-white">
+               <section className="mt-12 grid grid-cols-[1fr_auto] grid-rows-[16rem_auto_auto] gap-6">
+                  <div className="col-start-1 bg-[url('/images/bg-today-large.svg')] bg-cover bg-center p-4 w-full rounded-2xl flex not-md:flex-col items-center md:justify-between text-white">
                      <div>
                         <h1 className="font-bold text-3xl">{location}</h1>
                         <p className="text-[#D4D3D9] mt-2">
@@ -161,36 +185,41 @@ const App = () => {
                      </div>
                   </div>
 
-                  <div className="col-start-1 rounded shadow w-full flex gap-5">
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-48 h-28">
+                  <div className="col-start-1 rounded shadow w-full flex gap-3 md:gap-5 not-md:flex-wrap">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Feels Like</h2>
                         <p className="text-3xl">
                            {currentWeather?.apparentTemperature}°
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-48 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Humidity</h2>
                         <p className="text-3xl">
-                           {currentWeather?.currentHumidity}%
+                           {currentWeather?.currentHumidity}% 
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-48 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Wind Speed</h2>
                         <p className="text-3xl">
                            {currentWeather?.windspeed} km/h
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-48 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Precipitation</h2>
                         <p className="text-3xl">
                            {currentWeather?.currentPrecipitation} mm/h
                         </p>
                      </div>
                   </div>
-                  <div className="col-start-1 bg-[#1E1B3C] p-4 rounded shadow w-full"></div>
+                  <div className="col-start-1 rounded shadow w-full pt-4">
+                     <h2 className="text-lg font-semibold mb-4 text-white">Daily Forecast</h2>
+                     <DailyForecast data={dailyForecast} />
+                  </div>
 
-                  <aside className="col-start-1 md:col-start-2 md:row-start-1 row-span-3 bg-[#1E1B3C] text-white p-4 rounded-2xl">
-                     <div className="w-80">hello</div>
+                  <aside className="col-start-1 md:col-start-2 md:row-start-1 row-span-3 bg-[#1E1B3C] text-white p-6 rounded-2xl">
+                     <div className="w-80">
+                        <HourlyForecast data={hourlyForecast} />
+                     </div>
                   </aside>
                </section>
             )}
