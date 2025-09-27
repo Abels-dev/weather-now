@@ -1,18 +1,32 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NavBar from "./components/NavBar";
 import Loading from "./components/Loading";
 import { weatherCodeMap } from "./utils/weatherCodeMap";
 import DailyForecast from "./components/DailyForecast";
 import HourlyForecast from "./components/HourlyForecast";
+import { Error } from "./components/Error";
 const App = () => {
    const [searchLocation, setSearchLocation] = useState("");
    const [suggestions, setSuggestions] = useState([]);
+   const [exactLocation, setExactLocation] = useState({
+      latitude: 40.7128,
+      longitude: -74.006,
+      name: "New York",
+      country: "US",
+   });
    const [loading, setLoading] = useState(false);
-   const [location, setLocation] = useState(null);
+   const [searchLoading, setSearchLoading] = useState(false);
+   const [error, setError] = useState(false);
+   const [retry, setRetry] = useState(false);
    const [currentWeather, setCurrentWeather] = useState(null);
    const [dailyForecast, setDailyForecast] = useState(null);
    const [hourlyForecast, setHourlyForecast] = useState(null);
    const [notFound, setNotFound] = useState(false);
+   const [units, setUnits] = useState({
+      temperature: "celsius",
+      windspeed: "kmh",
+      precipitation: "mm",
+   });
    const timeoutRef = useRef(null);
 
    const formatDate = (dateString) => {
@@ -27,27 +41,48 @@ const App = () => {
       const formatted = new Intl.DateTimeFormat("en-US", options).format(date);
       return formatted;
    };
+   const handleUnitChange = (unitType) => {
+      if (unitType === "metric") {
+         setUnits({
+            temperature: "celsius",
+            windspeed: "kmh",
+            precipitation: "mm",
+         });
+      } else {
+         setUnits({
+            temperature: "fahrenheit",
+            windspeed: "mph",
+            precipitation: "inch",
+         });
+      }
+   };
+   const handleRetry = () => {
+      setError(false);
+      setRetry(true);
+   };
    const fetchSuggestions = async (query) => {
       if (!query) return;
+      setSearchLoading(true);
       try {
          const res = await fetch(
             `https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=en&format=json`
          );
          const data = await res.json();
          setSuggestions(data.results || []);
-         console.log("Fetched suggestions:", data);
       } catch (error) {
          console.log("Error fetching suggestions:", error);
+      } finally {
+         setSearchLoading(false);
       }
    };
-   const handleSearchBtn=()=>{
+   const handleSearchBtn = () => {
       fetchSuggestions(searchLocation);
-      if(suggestions.length===0){
+      if (suggestions.length === 0) {
          setNotFound(true);
-      }else{
+      } else {
          setNotFound(false);
       }
-   }
+   };
    const handleInputChange = (e) => {
       const value = e.target.value;
       setSearchLocation(value);
@@ -71,10 +106,8 @@ const App = () => {
             data.hourly.apparent_temperature[index];
          currentWeatherData.currentPrecipitation =
             data.hourly.precipitation[index];
-         console.log("Extracted current weather data:", currentWeatherData);
       } else {
          console.log("Current hour not found in hourly data");
-         console.log(currentWeatherData);
       }
 
       return currentWeatherData;
@@ -83,16 +116,15 @@ const App = () => {
       setLoading(true);
       try {
          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true&hourly=apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,weathercode`
+            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true&hourly=apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,weathercode&temperature_unit=${units.temperature}&windspeed_unit=${units.windspeed}&precipitation_unit=${units.precipitation}`
          );
          const data = await res.json();
          setHourlyForecast(data.hourly);
          const extractedWeather = extractCurrentWeather(data);
          setCurrentWeather(extractedWeather);
-         const locationName = location.name + ", " + location.country;
-         setLocation(locationName);
       } catch (error) {
          console.log("Error fetching weather data:", error);
+         setError(true);
       } finally {
          setLoading(false);
       }
@@ -100,27 +132,49 @@ const App = () => {
    const fetchDailyForecast = async (location) => {
       try {
          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode`
+            `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&temperature_unit=${units.temperature}&windspeed_unit=${units.windspeed}&precipitation_unit=${units.precipitation}`
          );
          const data = await res.json();
          setDailyForecast(data.daily);
       } catch (error) {
          console.log("Error fetching daily forecast data:", error);
+         setError(true);
       }
    };
    const handleSelectSuggestion = (suggestion) => {
+      setNotFound(false);
       setSearchLocation("");
       setSuggestions([]);
-      console.log("Selected suggestion:", suggestion);
+      setExactLocation({
+         latitude: suggestion.latitude,
+         longitude: suggestion.longitude,
+         name: suggestion.name,
+         country: suggestion.country,
+      });
       fetchWeatherData(suggestion);
       fetchDailyForecast(suggestion);
    };
+
+   useEffect(() => {
+      fetchWeatherData(exactLocation);
+      fetchDailyForecast(exactLocation);
+      setRetry(false);
+   }, [units.temperature, units.windspeed, units.precipitation, retry]);
+
+   if (error) {
+      return (
+         <div className="w-full min-h-screen bg-[#02012C] p-6 font-bricolage">
+            <NavBar />
+            <Error handleRetry={handleRetry} />
+         </div>
+      );
+   }
    return (
       <div className="w-full min-h-screen bg-[#02012C] p-6 font-bricolage">
          <div className="max-w-[1216px] mx-auto">
-            <NavBar />
+            <NavBar handleUnitChange={handleUnitChange} />
             <section>
-               <h1 className="font-bold font-bricolage text-5xl text-white text-center my-16">
+               <h1 className="font-bold font-bricolage text-6xl text-white text-center my-16 leading-snug">
                   How’s the sky looking today?
                </h1>
                <div className="flex not-md:flex-col items-center gap-4 w-full max-w-2xl mx-auto">
@@ -137,88 +191,139 @@ const App = () => {
                      />
                      {suggestions.length > 0 && (
                         <div className="absolute left-0 right-0 top-16 bg-[#1E1B3C] text-white py-2 px-2 rounded-xl">
-                           {suggestions.map((suggestion, index) => (
-                              <div
-                                 key={suggestion.id}
-                                 onClick={() =>
-                                    handleSelectSuggestion(suggestion)
-                                 }
-                                 className={`py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] rounded-lg  ${
-                                    index === 0 ? "bg-[#302F4A] rounded-lg" : ""
-                                 }`}>
-                                 {suggestion.name}, {suggestion?.admin1},{" "}
-                                 {suggestion.country}
+                           {searchLoading ? (
+                              <div className="flex items-center gap-2 py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] rounded-lg">
+                                 <img
+                                    src="./images/icon-loading.svg"
+                                    alt="Loading..."
+                                 />
+                                 <span>Search in progress</span>
                               </div>
-                           ))}
+                           ) : (
+                              suggestions.map((suggestion, index) => (
+                                 <div
+                                    key={suggestion.id}
+                                    onClick={() =>
+                                       handleSelectSuggestion(suggestion)
+                                    }
+                                    className={`py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] rounded-lg  ${
+                                       index === 0
+                                          ? "bg-[#302F4A] rounded-lg"
+                                          : ""
+                                    }`}>
+                                    {suggestion.name}, {suggestion?.admin1},{" "}
+                                    {suggestion.country}
+                                 </div>
+                              ))
+                           )}
                         </div>
                      )}
                   </div>
-                  <button className="px-6 py-4 bg-blue-600 text-white rounded-xl not-md:w-full w-28" onClick={handleSearchBtn}>
+                  <button
+                     className="px-6 py-4 bg-blue-600 text-white rounded-xl not-md:w-full w-28"
+                     onClick={handleSearchBtn}>
                      Search
                   </button>
                </div>
             </section>
-            {loading ? (
-               <Loading />
-            ) : notFound ? (
-               <div className="font-semibold text-white text-2xl text-center mt-12">No search result found!</div>
+            {notFound ? (
+               <div className="font-semibold text-white text-2xl text-center mt-12">
+                  No search result found!
+               </div>
             ) : (
-               <section className="mt-12 grid grid-cols-[1fr_auto] grid-rows-[16rem_auto_auto] gap-6">
-                  <div className="col-start-1 bg-[url('/images/bg-today-large.svg')] bg-cover bg-center p-4 w-full rounded-2xl flex not-md:flex-col items-center md:justify-between text-white">
-                     <div>
-                        <h1 className="font-bold text-3xl">{location}</h1>
-                        <p className="text-[#D4D3D9] mt-2">
-                           {currentWeather && formatDate(currentWeather.time)}
-                        </p>
-                     </div>
-                     <div className="flex items-center gap-6">
-                        <img
-                           src={`./images/${
-                              weatherCodeMap[currentWeather?.weathercode]
-                           }`}
-                           alt="Weather Icon"
-                           className="size-32"
-                        />
-                        <h2 className="font-semibold text-8xl">
-                           {currentWeather?.temperature}°
-                        </h2>
-                     </div>
+               <section className="mt-12 grid grid-cols-1 lg:grid-cols-[1fr_auto] grid-rows-[16rem_auto_auto] gap-6">
+                  <div
+                     className={`col-start-1 ${
+                        loading
+                           ? "bg-[#262540]"
+                           : "bg-[url('/images/bg-today-small.svg')] md:bg-[url('/images/bg-today-large.svg')] bg-cover bg-center"
+                     } not-md:px-2 not-md:py-6 p-4 w-full rounded-2xl flex not-md:flex-col gap-4 items-center md:justify-between text-white`}>
+                     {loading ? (
+                        <div className="text-lg text-[#D4D3D9] flex flex-col items-center justify-center self-center w-full h-full gap-2">
+                           <img src="./images/icon-loading-dots.png" />
+                           <span>Loading...</span>
+                        </div>
+                     ) : (
+                        <>
+                           <div className="w-full">
+                              <h1 className="font-bold text-3xl not-md:text-center">
+                                 {exactLocation?.name +
+                                    ", " +
+                                    exactLocation?.country}
+                              </h1>
+                              <p className="text-[#D4D3D9] mt-2 not-md:text-center">
+                                 {currentWeather &&
+                                    formatDate(currentWeather.time)}
+                              </p>
+                           </div>
+                           <div className="flex items-center justify-center gap-6 w-full flex-wrap">
+                              <img
+                                 src={`./images/${
+                                    weatherCodeMap[currentWeather?.weathercode]
+                                 }`}
+                                 alt="Weather Icon"
+                                 className="size-24 md:size-32"
+                              />
+                              <h2 className="font-semibold text-6xl md:text-8xl">
+                                 {currentWeather?.temperature}°
+                              </h2>
+                           </div>
+                        </>
+                     )}
                   </div>
 
-                  <div className="col-start-1 rounded shadow w-full flex gap-3 md:gap-5 not-md:flex-wrap">
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
+                  <div className="col-start-1 rounded shadow w-full flex gap-3 md:gap-4 flex-wrap">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Feels Like</h2>
-                        <p className="text-3xl">
-                           {currentWeather?.apparentTemperature}°
+                        <p className="text-2xl">
+                           {loading
+                              ? "__"
+                              : currentWeather?.apparentTemperature + "°"}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Humidity</h2>
-                        <p className="text-3xl">
-                           {currentWeather?.currentHumidity}% 
+                        <p className="text-2xl">
+                           {loading
+                              ? "__"
+                              : currentWeather?.currentHumidity + "%"}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Wind Speed</h2>
-                        <p className="text-3xl">
-                           {currentWeather?.windspeed} km/h
+                        <p className="text-2xl">
+                           {loading
+                              ? "__"
+                              : currentWeather?.windspeed +
+                                " " +
+                                (units.windspeed == "kmh" ? "km/h" : "mph")}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-48 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Precipitation</h2>
-                        <p className="text-3xl">
-                           {currentWeather?.currentPrecipitation} mm/h
+                        <p className="text-2xl">
+                           {loading
+                              ? "__"
+                              : currentWeather?.currentPrecipitation +
+                                " " +
+                                (units.precipitation == "mm" ? "mm" : "inch")}
                         </p>
                      </div>
                   </div>
                   <div className="col-start-1 rounded shadow w-full pt-4">
-                     <h2 className="text-lg font-semibold mb-4 text-white">Daily Forecast</h2>
-                     <DailyForecast data={dailyForecast} />
+                     <h2 className="text-lg font-semibold mb-4 text-white">
+                        Daily Forecast
+                     </h2>
+                     <DailyForecast data={dailyForecast} loading={loading} />
                   </div>
 
-                  <aside className="col-start-1 md:col-start-2 md:row-start-1 row-span-3 bg-[#1E1B3C] text-white p-6 rounded-2xl">
-                     <div className="w-80">
-                        <HourlyForecast data={hourlyForecast} />
+                  <aside className="col-start-1 lg:col-start-2 lg:row-start-1 row-span-3 bg-[#1E1B3C] text-white p-6 rounded-2xl">
+                     <div className="w-full lg:w-80">
+                        <HourlyForecast
+                           data={hourlyForecast}
+                           loading={loading}
+                           currentTempUnit={units.temperature}
+                        />
                      </div>
                   </aside>
                </section>
