@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "./components/NavBar";
-import Loading from "./components/Loading";
 import { weatherCodeMap } from "./utils/weatherCodeMap";
 import DailyForecast from "./components/DailyForecast";
 import HourlyForecast from "./components/HourlyForecast";
