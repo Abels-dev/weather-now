@@ -1,5 +1,6 @@
 import { weatherCodeMap } from "../utils/weatherCodeMap";
-const DailyForecast = ({ data }) => {
+const DailyForecast = ({ data, loading }) => {
+   const arrDemo = [1, 2, 3, 4, 5, 6, 7];
    const formatDate = (dateString) => {
       const date = new Date(dateString);
 
@@ -10,21 +11,33 @@ const DailyForecast = ({ data }) => {
       return formatted;
    };
    return (
-      <div className="flex gap-4 not-md:flex-wrap text-white">
-         {data &&
+      <div className="flex gap-4 flex-wrap text-white">
+         {loading ? (
+            arrDemo.map((_, index) => (
+               <div
+                  key={index}
+                  className="w-[100px] h-[160px] px-2 py-4 rounded-xl bg-[#262540] flex flex-col items-center animate-pulse">
+                  
+               </div>
+            ))
+         ) : (
+            data &&
             data.time.map((date, index) => (
-               <div key={index} className="max-w-[120px] px-2 py-4 rounded-xl bg-[#262540] flex flex-col items-center">
+               <div
+                  key={index}
+                  className="max-w-[100px] px-2 py-4 rounded-xl bg-[#262540] flex flex-col items-center">
                   <p>{formatDate(date)}</p>
                   <img
                      src={`./images/${weatherCodeMap[data.weathercode[index]]}`}
                      alt="Weather Icon"
                   />
                   <div className="flex justify-between items-center self-start w-full text-[#D4D3D9]">
-                    <span>{data.temperature_2m_max[index]}°</span>
-                    <span>{data.temperature_2m_min[index]}°</span>
+                     <span>{data.temperature_2m_max[index]}°</span>
+                     <span>{data.temperature_2m_min[index]}°</span>
                   </div>
                </div>
-            ))}
+            ))
+         )}
       </div>
    );
 };
