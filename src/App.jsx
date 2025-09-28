@@ -15,6 +15,7 @@ const App = () => {
    const [currentWeather, setCurrentWeather] = useState(null);
    const [dailyForecast, setDailyForecast] = useState(null);
    const [hourlyForecast, setHourlyForecast] = useState(null);
+   const [favouriteLocations,setFavouriteLocations]=useState(localStorage.getItem("favouriteLocations") ? JSON.parse(localStorage.getItem("favouriteLocations")) : []);
    const [notFound, setNotFound] = useState(false);
    const [units, setUnits] = useState({
       temperature: "celsius",
@@ -54,6 +55,41 @@ const App = () => {
       setError(false);
       setRetry(true);
    };
+   const handleFavourites=()=>{
+      if(!exactLocation.favourite){
+            setFavouriteLocations(prev => {
+            if (!exactLocation) return prev;
+            const exists = prev.some(
+            loc =>
+               loc.latitude === exactLocation.latitude &&
+               loc.longitude === exactLocation.longitude
+            );
+            if (exists) return prev;
+            const updated = [...prev, { ...exactLocation, favourite: true }];
+            localStorage.setItem("favouriteLocations", JSON.stringify(updated));
+            return updated;
+         })
+         setExactLocation(prev => prev ? { ...prev, favourite: true } : prev);
+      }else{
+         setFavouriteLocations(prev => {
+            if (!exactLocation) return prev;
+
+            const updated= prev.filter(
+               loc =>
+                  !(loc.latitude === exactLocation.latitude &&
+                  loc.longitude === exactLocation.longitude)
+            );
+            localStorage.setItem("favouriteLocations", JSON.stringify(updated));
+            return updated;
+         })
+         setExactLocation(prev => prev ? { ...prev, favourite: false } : prev);
+      }
+   }
+   const handleSelectFavourite=(location)=>{
+        fetchWeatherData(location);
+        fetchDailyForecast(location);
+        setExactLocation(location);
+   }
    const fetchSuggestions = async (query) => {
       if (!query) return;
       setSearchLoading(true);
@@ -137,6 +173,11 @@ const App = () => {
       }
    };
    const handleSelectSuggestion = (suggestion) => {
+      const isFavourite = favouriteLocations.some(
+         (loc) =>
+            loc.latitude === suggestion.latitude &&
+            loc.longitude === suggestion.longitude
+      );
       setNotFound(false);
       setSearchLocation("");
       setSuggestions([]);
@@ -145,6 +186,7 @@ const App = () => {
          longitude: suggestion.longitude,
          name: suggestion.name,
          country: suggestion.country,
+         favourite: isFavourite,
       });
       fetchWeatherData(suggestion);
       fetchDailyForecast(suggestion);
@@ -186,7 +228,7 @@ const App = () => {
                   JSON.stringify(location)
                );
             }
-            setExactLocation(location);
+            setExactLocation({...location, favourite: false});
             fetchWeatherData(location);
             fetchDailyForecast(location);
          } catch (err) {
@@ -213,7 +255,7 @@ const App = () => {
    return (
       <div className="w-full min-h-screen bg-[#02012C] p-6 font-bricolage">
          <div className="max-w-[1216px] mx-auto">
-            <NavBar handleUnitChange={handleUnitChange} />
+            <NavBar handleUnitChange={handleUnitChange} favouriteLocations={favouriteLocations} exactLocation={exactLocation} handleSwitchToFavourite={handleSelectFavourite} />
             <section>
                <h1 className="font-bold font-bricolage text-6xl text-white text-center my-16 leading-snug">
                   How’s the sky looking today?
@@ -287,11 +329,14 @@ const App = () => {
                      ) : (
                         <>
                            <div className="w-full">
-                              <h1 className="font-bold text-3xl not-md:text-center">
+                              <div className="flex items-center gap-4">
+                                 <h1 className="font-bold text-3xl not-md:text-center">
                                  {exactLocation?.name +
                                     ", " +
                                     exactLocation?.country}
-                              </h1>
+                                 </h1>
+                                 <button onClick={handleFavourites} className="cursor-pointer"><img src={`/images/${exactLocation?.favourite ? "favouriteFilled.png" : "favourite.png"}`} className="size-6"/></button>
+                              </div>
                               <p className="text-[#D4D3D9] mt-2 not-md:text-center">
                                  {currentWeather &&
                                     formatDate(currentWeather.time)}
