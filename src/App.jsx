@@ -7,13 +7,8 @@ import { Error } from "./components/Error";
 const App = () => {
    const [searchLocation, setSearchLocation] = useState("");
    const [suggestions, setSuggestions] = useState([]);
-   const [exactLocation, setExactLocation] = useState({
-      latitude: 40.7128,
-      longitude: -74.006,
-      name: "New York",
-      country: "US",
-   });
-   const [loading, setLoading] = useState(false);
+   const [exactLocation, setExactLocation] = useState(null);
+   const [loading, setLoading] = useState(true);
    const [searchLoading, setSearchLoading] = useState(false);
    const [error, setError] = useState(false);
    const [retry, setRetry] = useState(false);
@@ -27,7 +22,7 @@ const App = () => {
       precipitation: "mm",
    });
    const timeoutRef = useRef(null);
-
+   const hasFetchedRef = useRef(false);
    const formatDate = (dateString) => {
       const date = new Date(dateString);
 
@@ -111,7 +106,7 @@ const App = () => {
 
       return currentWeatherData;
    };
-   const fetchWeatherData = async (location) => {
+   const fetchWeatherData = async (location) => {      
       setLoading(true);
       try {
          const res = await fetch(
@@ -121,6 +116,7 @@ const App = () => {
          setHourlyForecast(data.hourly);
          const extractedWeather = extractCurrentWeather(data);
          setCurrentWeather(extractedWeather);
+         if(!hasFetchedRef.current) hasFetchedRef.current = true;
       } catch (error) {
          console.log("Error fetching weather data:", error);
          setError(true);
@@ -155,8 +151,54 @@ const App = () => {
    };
 
    useEffect(() => {
-      fetchWeatherData(exactLocation);
-      fetchDailyForecast(exactLocation);
+      if (hasFetchedRef.current) return;
+      const fetchIntialData = async () => {         
+         let location = localStorage.getItem("defaultLocation")
+            ? JSON.parse(localStorage.getItem("defaultLocation"))
+            : null;
+         try {
+            if (!location) {
+               const pos = await new Promise((resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(resolve, reject, {
+                     timeout: 8000,
+                     maximumAge: 0,
+                  });
+               });
+
+               const coords = {
+                  lat: pos.coords.latitude,
+                  lon: pos.coords.longitude,
+                  source: "browser",
+               };
+               const locationRes = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lon}&format=json`
+               );
+               const locationData = await locationRes.json();
+
+               location = {
+                  latitude: coords.lat,
+                  longitude: coords.lon,
+                  name: locationData.address.state,
+                  country: locationData.address.country,
+               };
+               localStorage.setItem(
+                  "defaultLocation",
+                  JSON.stringify(location)
+               );
+            }
+            setExactLocation(location);
+            fetchWeatherData(location);
+            fetchDailyForecast(location);
+         } catch (err) {
+            console.warn("Geolocation failed:", err.message);
+         }
+      };
+
+      if (!exactLocation) fetchIntialData();
+      else {
+         fetchWeatherData(exactLocation);
+         fetchDailyForecast(exactLocation);
+      }
       setRetry(false);
    }, [units.temperature, units.windspeed, units.precipitation, retry]);
 
