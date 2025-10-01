@@ -36,18 +36,18 @@ const HourlyForecast = ({ data, currentTempUnit, loading }) => {
             <div className="relative">
                <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-2 p-2 px-4 rounded-lg bg-[#3C3B5E]">
+                  className="flex items-center gap-2 p-2 px-4 rounded-lg bg-[#3C3B5E] not-dark:bg-[#3A4B7A]">
                   {currentDay}{" "}
                   <img src="./images/icon-dropdown.svg" alt="Expand" />
                </button>
                {showDropdown && (
-                  <div className="absolute top-12 z-30 right-0 bg-[#262540] p-2 rounded-xl w-52 shadow-sm shadow-slate-900">
+                  <div className="absolute top-12 z-30 right-0 bg-[#262540] not-dark:bg-[#3A4B7A] p-2 rounded-xl w-52 shadow-sm shadow-slate-900">
                      {DATES.map((day, index) => (
                         <div
                            key={index}
                            onClick={() => handleChangeDay(day)}
-                           className={`p-2  mt-1 rounded-lg hover:bg-[#302F4A] cursor-pointer ${
-                              currentDay === day ? "bg-[#302F4A]" : ""
+                           className={`p-2  mt-1 rounded-lg hover:bg-[#302F4A] not-dark:hover:bg-[#4C5D99] cursor-pointer ${
+                              currentDay === day ? "bg-[#302F4A] not-dark:bg-[#4C5D99]" : ""
                            }`}>
                            {day}
                         </div>
@@ -62,7 +62,7 @@ const HourlyForecast = ({ data, currentTempUnit, loading }) => {
                   {arrDemo.map((_, index) => (
                      <div
                         key={index}
-                        className="flex items-center h-[55px] justify-between mt-4 px-3 pr-4 py-2 bg-[#302F4A] rounded-lg w-full animate-pulse">
+                        className="flex items-center h-[55px] justify-between mt-4 px-3 pr-4 py-2 bg-[#302F4A] not-dark:bg-[#5A6B9C] rounded-lg w-full animate-pulse">
                      </div>
                   ))}
                </>
@@ -77,7 +77,7 @@ const HourlyForecast = ({ data, currentTempUnit, loading }) => {
                      return (
                         <div
                            key={index}
-                           className="flex items-center justify-between mt-4 px-3 pr-4 py-2 bg-[#302F4A] rounded-lg w-full">
+                           className="flex items-center justify-between mt-4 px-3 pr-4 py-2 bg-[#302F4A] not-dark:bg-[#5A6B9C] rounded-lg w-full">
                            <div className="flex items-center gap-2">
                               <img
                                  src={`./images/${

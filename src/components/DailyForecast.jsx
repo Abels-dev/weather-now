@@ -16,7 +16,7 @@ const DailyForecast = ({ data, loading }) => {
             arrDemo.map((_, index) => (
                <div
                   key={index}
-                  className="w-[100px] h-[160px] px-2 py-4 rounded-xl bg-[#262540] flex flex-col items-center animate-pulse">
+                  className="w-[100px] h-[160px] px-2 py-4 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] flex flex-col items-center animate-pulse">
                   
                </div>
             ))
@@ -25,7 +25,7 @@ const DailyForecast = ({ data, loading }) => {
             data.time.map((date, index) => (
                <div
                   key={index}
-                  className="max-w-[100px] px-2 py-4 rounded-xl bg-[#262540] flex flex-col items-center">
+                  className="max-w-[100px] px-2 py-4 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] flex flex-col items-center">
                   <p>{formatDate(date)}</p>
                   <img
                      src={`./images/${weatherCodeMap[data.weathercode[index]]}`}

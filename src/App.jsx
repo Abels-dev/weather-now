@@ -23,7 +23,6 @@ const App = () => {
       precipitation: "mm",
    });
    const timeoutRef = useRef(null);
-   const hasFetchedRef = useRef(false);
    const formatDate = (dateString) => {
       const date = new Date(dateString);
 
@@ -152,7 +151,6 @@ const App = () => {
          setHourlyForecast(data.hourly);
          const extractedWeather = extractCurrentWeather(data);
          setCurrentWeather(extractedWeather);
-         if(!hasFetchedRef.current) hasFetchedRef.current = true;
       } catch (error) {
          console.log("Error fetching weather data:", error);
          setError(true);
@@ -193,7 +191,6 @@ const App = () => {
    };
 
    useEffect(() => {
-      if (hasFetchedRef.current) return;
       const fetchIntialData = async () => {         
          let location = localStorage.getItem("defaultLocation")
             ? JSON.parse(localStorage.getItem("defaultLocation"))
@@ -228,7 +225,12 @@ const App = () => {
                   JSON.stringify(location)
                );
             }
-            setExactLocation({...location, favourite: false});
+            const isFavourite = favouriteLocations.some(
+               (loc) =>
+                  loc.latitude === location.latitude &&
+                  loc.longitude === location.longitude
+            );
+            setExactLocation({...location, favourite: isFavourite});
             fetchWeatherData(location);
             fetchDailyForecast(location);
          } catch (err) {
@@ -246,22 +248,22 @@ const App = () => {
 
    if (error) {
       return (
-         <div className="w-full min-h-screen bg-[#02012C] p-6 font-bricolage">
+         <div className="w-full min-h-screen bg-[#02012C] not-dark:bg-[url('./images/light-background.jpg')]  p-6 font-bricolage">
             <NavBar />
             <Error handleRetry={handleRetry} />
          </div>
       );
    }
    return (
-      <div className="w-full min-h-screen bg-[#02012C] p-6 font-bricolage">
+      <div className="w-full min-h-screen bg-[#02012C] not-dark:bg-[url('./images/light-background.jpg')]  p-6 font-bricolage">
          <div className="max-w-[1216px] mx-auto">
             <NavBar handleUnitChange={handleUnitChange} favouriteLocations={favouriteLocations} exactLocation={exactLocation} handleSwitchToFavourite={handleSelectFavourite} />
             <section>
-               <h1 className="font-bold font-bricolage text-6xl text-white text-center my-16 leading-snug">
+               <h1 className="font-bold font-bricolage text-6xl text-white not-dark:text-[#02012C] text-center my-16 leading-snug">
                   How’s the sky looking today?
                </h1>
                <div className="flex not-md:flex-col items-center gap-4 w-full max-w-2xl mx-auto">
-                  <div className="flex-1 relative flex items-center gap-4 bg-[#1E1B3C] text-white py-4 px-6 rounded-xl w-full">
+                  <div className="flex-1 relative flex items-center gap-4 bg-[#1E1B3C] not-dark:bg-white shadow-md not-dark:text-slate-900 text-white py-4 px-6 rounded-xl w-full">
                      <img src="./images/icon-search.svg" alt="Search Icon" />
                      <input
                         type="text"
@@ -270,12 +272,12 @@ const App = () => {
                         onChange={(e) => {
                            handleInputChange(e);
                         }}
-                        className=" w-full focus:outline-0 placeholder:text-[#D4D3D9]"
+                        className=" w-full focus:outline-0  placeholder:text-[#D4D3D9] not-dark:placeholder:text-slate-700"
                      />
                      {suggestions.length > 0 && (
-                        <div className="absolute left-0 right-0 top-16 bg-[#1E1B3C] text-white py-2 px-2 rounded-xl">
+                        <div className="absolute left-0 right-0 top-16 bg-[#1E1B3C] not-dark:bg-[#4C5D99] text-white py-2 px-2 rounded-xl">
                            {searchLoading ? (
-                              <div className="flex items-center gap-2 py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] rounded-lg">
+                              <div className="flex items-center gap-2 py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] not-dark:hover:bg-[#3A4B7A] rounded-lg">
                                  <img
                                     src="./images/icon-loading.svg"
                                     alt="Loading..."
@@ -289,9 +291,9 @@ const App = () => {
                                     onClick={() =>
                                        handleSelectSuggestion(suggestion)
                                     }
-                                    className={`py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] rounded-lg  ${
+                                    className={`py-2 px-2 mb-1 cursor-pointer hover:bg-[#302F4A] not-dark:hover:bg-[#3A4B7A] rounded-lg  ${
                                        index === 0
-                                          ? "bg-[#302F4A] rounded-lg"
+                                          ? "bg-[#302F4A] rounded-lg not-dark:bg-[#3A4B7A]"
                                           : ""
                                     }`}>
                                     {suggestion.name}, {suggestion?.admin1},{" "}
@@ -318,7 +320,7 @@ const App = () => {
                   <div
                      className={`col-start-1 ${
                         loading
-                           ? "bg-[#262540]"
+                           ? "bg-[#262540] not-dark:bg-[#4b536b] animate-pulse"
                            : "bg-[url('/images/bg-today-small.svg')] md:bg-[url('/images/bg-today-large.svg')] bg-cover bg-center"
                      } not-md:px-2 not-md:py-6 p-4 w-full rounded-2xl flex not-md:flex-col gap-4 items-center md:justify-between text-white`}>
                      {loading ? (
@@ -358,8 +360,8 @@ const App = () => {
                      )}
                   </div>
 
-                  <div className="col-start-1 rounded shadow w-full flex gap-3 md:gap-4 flex-wrap">
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
+                  <div className="col-start-1 rounded w-full flex gap-3 md:gap-4 flex-wrap">
+                     <div className="p-5 rounded-xl bg-[#262540]  not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Feels Like</h2>
                         <p className="text-2xl">
                            {loading
@@ -367,7 +369,7 @@ const App = () => {
                               : currentWeather?.apparentTemperature + "°"}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Humidity</h2>
                         <p className="text-2xl">
                            {loading
@@ -375,7 +377,7 @@ const App = () => {
                               : currentWeather?.currentHumidity + "%"}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Wind Speed</h2>
                         <p className="text-2xl">
                            {loading
@@ -385,7 +387,7 @@ const App = () => {
                                 (units.windspeed == "kmh" ? "km/h" : "mph")}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Precipitation</h2>
                         <p className="text-2xl">
                            {loading
@@ -396,14 +398,14 @@ const App = () => {
                         </p>
                      </div>
                   </div>
-                  <div className="col-start-1 rounded shadow w-full pt-4">
-                     <h2 className="text-lg font-semibold mb-4 text-white">
+                  <div className="col-start-1 rounded w-full pt-4">
+                     <h2 className="text-lg font-semibold mb-4 text-white not-dark:text-[#02012C]">
                         Daily Forecast
                      </h2>
                      <DailyForecast data={dailyForecast} loading={loading} />
                   </div>
 
-                  <aside className="col-start-1 lg:col-start-2 lg:row-start-1 row-span-3 bg-[#1E1B3C] text-white p-6 rounded-2xl">
+                  <aside className="col-start-1 lg:col-start-2 lg:row-start-1 row-span-3 bg-[#1E1B3C] not-dark:bg-[#4C5D99] text-white p-6 rounded-2xl">
                      <div className="w-full lg:w-80">
                         <HourlyForecast
                            data={hourlyForecast}
