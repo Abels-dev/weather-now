@@ -202,13 +202,12 @@ const App = () => {
                      timeout: 8000,
                      maximumAge: 0,
                   });
-               });
-
+               });    
                const coords = {
                   lat: pos.coords.latitude,
                   lon: pos.coords.longitude,
                   source: "browser",
-               };
+               };               
                const locationRes = await fetch(
                   `https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lon}&format=json`
                );
@@ -234,6 +233,15 @@ const App = () => {
             fetchWeatherData(location);
             fetchDailyForecast(location);
          } catch (err) {
+            let loc;
+            if(favouriteLocations?.length>0){
+                loc=favouriteLocations[0];
+            }else{
+               loc={ latitude: 40.7128, longitude: -74.006, name: "New York", country: "USA", favourite: false };
+            }
+            setExactLocation(loc);
+            fetchWeatherData(loc);
+            fetchDailyForecast(loc);
             console.warn("Geolocation failed:", err.message);
          }
       };
