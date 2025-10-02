@@ -111,9 +111,9 @@ weather-app/
 ---
 
 ## 🙏 Acknowledgements
+- Frontend Mentor for creating this challenge and giving all the resources 
 - Weather data by [Open-Meteo](https://open-meteo.com/)
 - Geocoding by [OpenStreetMap Nominatim](https://nominatim.openstreetmap.org/)
-- UI inspired by modern weather apps and community feedback.
 
 ---
 
