@@ -9,7 +9,7 @@ const NavBar = ({ handleUnitChange, favouriteLocations, exactLocation, handleSwi
    const [selectedUnit, setSelectedUnit] = useState("metric");
    const [showUnits, setShowUnits] = useState(false);
    const [showFavourites, setShowFavourites] = useState(false);
-   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
+   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark" || true);
    const handleSwitchUnit = () => {
       setSelectedUnit(selectedUnit === "metric" ? "imperial" : "metric");
       setShowUnits(false);
