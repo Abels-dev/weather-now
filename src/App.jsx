@@ -263,7 +263,7 @@ const App = () => {
       );
    }
    return (
-      <div className="w-full min-h-screen bg-[url('/images/light-background.jpg')] dark:bg-[url('')] dark:bg-[#02012C]   p-6 font-bricolage">
+      <div className="w-full min-h-screen bg-cyan-300 bg-[url('/images/light-background.jpg')]  dark:bg-[url('')] dark:bg-[#02012C]   p-6 font-bricolage">
          <div className="max-w-[1216px] mx-auto">
             <NavBar handleUnitChange={handleUnitChange} favouriteLocations={favouriteLocations} exactLocation={exactLocation} handleSwitchToFavourite={handleSelectFavourite} />
             <section>
