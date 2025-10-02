@@ -30,7 +30,7 @@ A modern, elegant, and responsive weather application built with React and Tailw
 
 | Light Mode | Dark Mode |
 |------------|-----------|
-| ![Light Mode](public/design/desktop-design-metric.jpg) | ![Dark Mode](public/design/desktop-design-imperial.jpg) |
+| ![Light Mode](public/design/light-ui.png) | ![Dark Mode](public/design/desktop-design-imperial.jpg) |
 
 ---
 
@@ -107,12 +107,6 @@ weather-app/
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin feature/YourFeature`)
 5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
 
 ---
 
