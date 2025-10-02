@@ -44,7 +44,7 @@ const NavBar = ({ handleUnitChange, favouriteLocations, exactLocation, handleSwi
          <div className="flex items-center gap-4 md:gap-6">
             <div className="relative">
                <button
-                  className="flex items-center gap-2 p-2 px-3 md:p-3 md:px-4 text-white bg-[#262540] not-dark:bg-[#4C5D99] rounded-lg cursor-pointer"
+                  className="flex items-center gap-2 p-2 px-3 md:p-3 md:px-4 text-white bg-[#262540] not-dark:bg-[#4C5D99] rounded-lg cursor-pointer focus:ring-1 focus:ring-amber-50"
                   onClick={() => setShowFavourites(!showFavourites)}>
                   <img src="./images/favouriteFilled.png" alt="favourites" className="size-4"/>
                   <span>Favourites</span>
