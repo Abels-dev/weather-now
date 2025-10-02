@@ -9,7 +9,7 @@ const NavBar = ({ handleUnitChange, favouriteLocations, exactLocation, handleSwi
    const [selectedUnit, setSelectedUnit] = useState("metric");
    const [showUnits, setShowUnits] = useState(false);
    const [showFavourites, setShowFavourites] = useState(false);
-   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark" || true);
+   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
    const handleSwitchUnit = () => {
       setSelectedUnit(selectedUnit === "metric" ? "imperial" : "metric");
       setShowUnits(false);
@@ -32,8 +32,12 @@ const NavBar = ({ handleUnitChange, favouriteLocations, exactLocation, handleSwi
    };
    useEffect(()=>{
       const savedTheme = localStorage.getItem("theme");
-      if(savedTheme === "dark"){
-         document.querySelector("html").classList.add("dark");
+      if (!savedTheme || savedTheme === "dark") {
+         document.documentElement.classList.add("dark");
+         if (!savedTheme) {
+         localStorage.setItem("theme", "dark");
+         }
+         setIsDarkMode(true);
       }
    },[])
    return (
