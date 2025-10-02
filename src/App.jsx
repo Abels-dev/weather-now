@@ -280,7 +280,7 @@ const App = () => {
                         onChange={(e) => {
                            handleInputChange(e);
                         }}
-                        className=" w-full focus:outline-0  placeholder:text-[#D4D3D9] not-dark:placeholder:text-slate-700"
+                        className=" w-full focus:outline-0 placeholder:text-[#D4D3D9] not-dark:placeholder:text-slate-700"
                      />
                      {suggestions.length > 0 && (
                         <div className="absolute left-0 right-0 top-16 bg-[#1E1B3C] not-dark:bg-[#4C5D99] text-white py-2 px-2 rounded-xl">
@@ -313,7 +313,7 @@ const App = () => {
                      )}
                   </div>
                   <button
-                     className="px-6 py-4 bg-blue-600 text-white rounded-xl not-md:w-full w-28"
+                     className="px-6 py-4 bg-blue-600 hover:bg-blue-800 text-white rounded-xl not-md:w-full w-28"
                      onClick={handleSearchBtn}>
                      Search
                   </button>

@@ -83,7 +83,7 @@ const NavBar = ({ handleUnitChange, favouriteLocations, exactLocation, handleSwi
             </div>
             <div className="relative">
                <button
-                  className="flex items-center p-2 px-3 md:p-3 md:px-4 gap-2 bg-[#262540] not-dark:bg-[#4C5D99] rounded-lg cursor-pointer"
+                  className="flex items-center p-2 px-3 md:p-3 md:px-4 gap-2 focus:ring-1 focus:ring-amber-50 bg-[#262540] not-dark:bg-[#4C5D99] rounded-lg cursor-pointer"
                   onClick={() => setShowUnits(!showUnits)}>
                   <img src="./images/icon-units.svg" alt="menu"/>
                   <span className="text-white">Units</span>
@@ -94,7 +94,7 @@ const NavBar = ({ handleUnitChange, favouriteLocations, exactLocation, handleSwi
                {showUnits && (
                   <div className="absolute z-30 right-0 w-52 p-3 bg-[#262540] not-dark:bg-[#4C5D99] rounded-lg mt-2">
                      <button
-                        className="text-white mb-4 cursor-pointer"
+                        className="text-white mb-4 cursor-pointer hover:bg-[#302F4A] not-dark:hover:bg-[#5A6B9C] rounded-lg p-2 w-full text-start focus:ring-1 focus:ring-amber-50"
                         onClick={handleSwitchUnit}>
                         Switch to{" "}
                         {selectedUnit === "metric" ? "Imperial" : "Metric"}
