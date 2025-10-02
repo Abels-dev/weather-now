@@ -338,9 +338,9 @@ const App = () => {
                         </div>
                      ) : (
                         <>
-                           <div className="w-full">
+                           <div className="w-full flex flex-col items-center md:items-start">
                               <div className="flex items-center gap-4">
-                                 <h1 className="font-bold text-3xl not-md:text-center">
+                                 <h1 className="font-bold text-xl md:text-3xl not-md:text-center">
                                  {exactLocation?.name +
                                     ", " +
                                     exactLocation?.country}
@@ -369,7 +369,7 @@ const App = () => {
                   </div>
 
                   <div className="col-start-1 rounded w-full flex gap-3 md:gap-4 flex-wrap">
-                     <div className="p-5 rounded-xl bg-[#262540]  not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540]  not-dark:bg-[#4C5D99] text-white w-36 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Feels Like</h2>
                         <p className="text-2xl">
                            {loading
@@ -377,7 +377,7 @@ const App = () => {
                               : currentWeather?.apparentTemperature + "°"}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-36 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Humidity</h2>
                         <p className="text-2xl">
                            {loading
@@ -385,7 +385,7 @@ const App = () => {
                               : currentWeather?.currentHumidity + "%"}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-36 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Wind Speed</h2>
                         <p className="text-2xl">
                            {loading
@@ -395,7 +395,7 @@ const App = () => {
                                 (units.windspeed == "kmh" ? "km/h" : "mph")}
                         </p>
                      </div>
-                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-40 md:w-44 h-28">
+                     <div className="p-5 rounded-xl bg-[#262540] not-dark:bg-[#4C5D99] text-white w-36 md:w-44 h-28">
                         <h2 className="text-[#D4D3D9] mb-4">Precipitation</h2>
                         <p className="text-2xl">
                            {loading
